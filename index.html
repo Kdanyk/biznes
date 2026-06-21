@@ -3,29 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  
-  <meta name="theme-color" content="#F9FAFB">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Бізнес Оцінка">
-  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1F2937">
   
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <title>Бізнес Варіанти</title>
   <style>
     /* =========================================
-       Базові налаштування та змінні (Telegram Ready)
+       Базові налаштування та Змінні
     ========================================= */
     :root {
-      --bg-color: var(--tg-theme-secondary-bg-color, #F9FAFB);
+      --bg-color: var(--tg-theme-secondary-bg-color, #F3F4F6);
       --card-bg: var(--tg-theme-bg-color, #FFFFFF);
-      --text-main: var(--tg-theme-text-color, #1F2937);
+      --text-main: var(--tg-theme-text-color, #111827);
       --text-muted: var(--tg-theme-hint-color, #6B7280);
       --accent-blue: var(--tg-theme-button-color, #3B82F6);
       --accent-text: var(--tg-theme-button-text-color, #FFFFFF);
-      --border-color: var(--tg-theme-hint-color, #E5E7EB);
-      --nav-height: 65px;
+      --border-color: rgba(107, 114, 128, 0.15);
+      --danger-color: #EF4444;
+      --nav-height: 60px;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -35,134 +31,266 @@
       color: var(--text-main);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
+      padding-bottom: calc(var(--nav-height) + 20px);
     }
 
     /* =========================================
-       Макет та Хедер
+       Хедер та Папки
     ========================================= */
     header {
       background-color: var(--card-bg);
-      padding: env(safe-area-inset-top) 20px 16px;
-      padding-top: calc(env(safe-area-inset-top) + 20px);
-      text-align: center;
-      border-bottom: 1px solid rgba(107, 114, 128, 0.2);
+      padding-top: env(safe-area-inset-top);
+      border-bottom: 1px solid var(--border-color);
       position: sticky;
       top: 0;
-      z-index: 10;
+      z-index: 40;
     }
 
-    header h1 { font-size: 1.25rem; font-weight: 700; color: var(--text-main); }
+    .header-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 12px 20px;
+    }
 
-    main {
-      padding: 20px 20px calc(var(--nav-height) + env(safe-area-inset-bottom) + 20px);
-      max-width: 600px;
-      margin: 0 auto;
+    .folders-container {
+      display: flex;
+      align-items: center;
+      padding: 8px 16px 12px;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .folders-container::-webkit-scrollbar { display: none; }
+
+    .folder-chip {
+      padding: 6px 16px;
+      background: var(--bg-color);
+      color: var(--text-muted);
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .folder-chip.active {
+      background: var(--accent-blue);
+      color: var(--accent-text);
+    }
+
+    .btn-add-folder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: none;
+      border: 1px dashed var(--text-muted);
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      cursor: pointer;
     }
 
     /* =========================================
-       Анімації та Вкладки
+       Контент та Картки
     ========================================= */
-    .tab-content { display: none; }
-    .tab-content.active { display: block; animation: fadeIn 0.3s ease forwards; }
+    main { padding: 16px; max-width: 600px; margin: 0 auto; }
+
+    .tab-content { display: none; animation: fadeIn 0.2s ease forwards; }
+    .tab-content.active { display: flex; flex-direction: column; gap: 10px; }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
+      from { opacity: 0; transform: translateY(5px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* =========================================
-       Форма введення
-    ========================================= */
-    .input-group { display: flex; gap: 10px; margin-bottom: 24px; }
-
-    input[type="text"] {
-      flex: 1;
-      padding: 14px 16px;
-      border: 1px solid rgba(107, 114, 128, 0.3);
-      border-radius: 12px;
-      font-size: 1rem;
-      background: var(--card-bg);
-      color: var(--text-main);
-      outline: none;
-    }
-
-    input[type="text"]::placeholder { color: var(--text-muted); }
-    input[type="text"]:focus { border-color: var(--accent-blue); }
-
-    .btn-add {
-      background-color: var(--accent-blue);
-      color: var(--accent-text);
-      border: none;
-      border-radius: 12px;
-      padding: 0 20px;
-      font-weight: 600;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-    .btn-add:active { transform: scale(0.95); opacity: 0.8; }
-
-    /* =========================================
-       Список карток
-    ========================================= */
-    .list { display: flex; flex-direction: column; gap: 12px; }
-
     .card {
       background: var(--card-bg);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border-radius: 14px;
+      padding: 14px 16px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      border: 1px solid rgba(107, 114, 128, 0.15);
-      gap: 15px;
+      justify-content: space-between;
+      border: 1px solid var(--border-color);
+      position: relative;
     }
 
-    .card-info { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-    .card-text { font-size: 1rem; font-weight: 500; word-break: break-word; }
+    .card-content { flex: 1; padding-right: 12px; }
     
-    .card-actions { display: flex; gap: 12px; }
-    .action-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; opacity: 0.5; transition: opacity 0.2s; padding: 0;}
-    .action-btn:active { opacity: 1; transform: scale(0.9); }
+    .card-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 4px;
+    }
 
-    .card-controls { display: flex; align-items: center; gap: 12px; }
+    .card-title { font-size: 1rem; font-weight: 600; word-break: break-word; }
+    
+    .kebab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+    }
 
-    .badge-count { font-size: 1.1rem; font-weight: 700; color: var(--text-main); min-width: 24px; text-align: center; }
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge-count { font-size: 1.1rem; font-weight: 700; min-width: 24px; text-align: center; }
 
     .btn-vote {
       background-color: rgba(59, 130, 246, 0.1);
       color: var(--accent-blue);
       border: none;
       border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      font-size: 1.5rem;
+      width: 36px;
+      height: 36px;
+      font-size: 1.4rem;
       display: flex;
       justify-content: center;
       align-items: center;
       cursor: pointer;
     }
-    .btn-vote:active { transform: scale(0.85); background-color: var(--accent-blue); color: var(--accent-text); }
-
-    .empty-state { text-align: center; color: var(--text-muted); margin-top: 40px; font-size: 0.95rem; }
 
     /* =========================================
-       Нижня панель навігації
+       Контекстне меню (Три крапки)
+    ========================================= */
+    .dropdown-menu {
+      position: absolute;
+      top: 35px;
+      right: 16px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 20;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .dropdown-menu.active { display: flex; animation: fadeIn 0.1s; }
+
+    .dropdown-item {
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      border: none;
+      background: none;
+      text-align: left;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dropdown-item:active { background: var(--bg-color); }
+    .dropdown-item.danger { color: var(--danger-color); }
+    .dropdown-item:not(:last-child) { border-bottom: 1px solid var(--border-color); }
+
+    /* =========================================
+       FAB (Плаваюча кнопка)
+    ========================================= */
+    .fab {
+      position: fixed;
+      bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 16px);
+      right: 16px;
+      width: 56px;
+      height: 56px;
+      background-color: var(--accent-blue);
+      color: var(--accent-text);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+      cursor: pointer;
+      z-index: 30;
+      transition: transform 0.2s;
+    }
+    .fab:active { transform: scale(0.9); }
+    .fab svg { width: 24px; height: 24px; fill: currentColor; }
+
+    /* =========================================
+       Модальні Вікна
+    ========================================= */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(2px);
+      z-index: 100;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+
+    .modal-box {
+      background: var(--card-bg);
+      width: 100%;
+      max-width: 400px;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      animation: slideUp 0.2s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; }
+    
+    .modal-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: var(--bg-color);
+      color: var(--text-main);
+      font-size: 1rem;
+      margin-bottom: 16px;
+      outline: none;
+    }
+    .modal-input:focus { border-color: var(--accent-blue); }
+
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    
+    .btn-modal {
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-cancel { background: var(--bg-color); color: var(--text-main); }
+    .btn-save { background: var(--accent-blue); color: var(--accent-text); }
+
+    /* =========================================
+       Нижня Навігація
     ========================================= */
     .bottom-nav {
       position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
+      bottom: 0; left: 0; width: 100%;
       height: calc(var(--nav-height) + env(safe-area-inset-bottom));
       background-color: var(--card-bg);
-      border-top: 1px solid rgba(107, 114, 128, 0.2);
+      border-top: 1px solid var(--border-color);
       display: flex;
       justify-content: space-around;
       padding-bottom: env(safe-area-inset-bottom);
-      z-index: 100;
+      z-index: 40;
     }
 
     .nav-item {
@@ -177,30 +305,28 @@
       gap: 4px;
       cursor: pointer;
     }
-
-    .nav-item svg { fill: currentColor; width: 24px; height: 24px; }
+    .nav-item svg { fill: currentColor; width: 22px; height: 22px; }
     .nav-item.active { color: var(--accent-blue); }
+
+    .empty-state { text-align: center; color: var(--text-muted); margin-top: 40px; font-size: 0.95rem; }
   </style>
 </head>
 <body>
 
   <header>
-    <h1 id="header-title">Варіанти для бізнесу</h1>
+    <div class="header-title" id="header-title">Варіанти для бізнесу</div>
+    <div class="folders-container" id="folders-container">
+      </div>
   </header>
 
   <main>
-    <section id="tab-options" class="tab-content active">
-      <div class="input-group">
-        <input type="text" id="option-input" placeholder="Назва нового варіанту..." autocomplete="off">
-        <button class="btn-add" onclick="addOption()">Додати</button>
-      </div>
-      <div id="options-list" class="list"></div>
-    </section>
-
-    <section id="tab-rating" class="tab-content">
-      <div id="rating-list" class="list"></div>
-    </section>
+    <section id="tab-options" class="tab-content active"></section>
+    <section id="tab-rating" class="tab-content"></section>
   </main>
+
+  <div class="fab" onclick="openOptionModal()">
+    <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+  </div>
 
   <nav class="bottom-nav">
     <div class="nav-item active" onclick="switchTab('options')" id="nav-options">
@@ -213,173 +339,227 @@
     </div>
   </nav>
 
+  <div class="modal-overlay" id="modal-option">
+    <div class="modal-box">
+      <div class="modal-title" id="modal-option-title">Новий варіант</div>
+      <input type="text" class="modal-input" id="input-option" placeholder="Введіть назву...">
+      <div class="modal-actions">
+        <button class="btn-modal btn-cancel" onclick="closeModal('modal-option')">Скасувати</button>
+        <button class="btn-modal btn-save" onclick="saveOption()">Зберегти</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-folder">
+    <div class="modal-box">
+      <div class="modal-title">Нова папка</div>
+      <input type="text" class="modal-input" id="input-folder" placeholder="Назва папки...">
+      <div class="modal-actions">
+        <button class="btn-modal btn-cancel" onclick="closeModal('modal-folder')">Скасувати</button>
+        <button class="btn-modal btn-save" onclick="saveFolder()">Створити</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // --- 1. Ініціалізація Telegram Web App ---
-    const tg = window.Telegram.WebApp;
-    tg.ready(); 
-    tg.expand(); // Розгортаємо додаток на весь екран
+    // Ініціалізація Telegram
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+    }
 
-    // --- Локальні дані ---
-    let businessOptions = JSON.parse(localStorage.getItem('business_options')) || [];
-    let editingId = null; // Змінна для збереження ID варіанту, який редагується
-
-    const saveToLocalStorage = () => {
-      localStorage.setItem('business_options', JSON.stringify(businessOptions));
+    // Стейт додатку
+    let state = {
+      folders: JSON.parse(localStorage.getItem('biz_folders')) || [{ id: 'default', name: 'Загальні' }],
+      options: JSON.parse(localStorage.getItem('biz_options')) || [],
+      activeFolderId: 'default',
+      activeTab: 'options',
+      editingOptionId: null
     };
 
-    // --- 3. Система Пуш-повідомлень (Notification API) ---
-    const requestNotificationPermission = () => {
-      if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
-        Notification.requestPermission();
+    const saveData = () => {
+      localStorage.setItem('biz_folders', JSON.stringify(state.folders));
+      localStorage.setItem('biz_options', JSON.stringify(state.options));
+    };
+
+    // --- РЕНДЕР ПАПОК ---
+    const renderFolders = () => {
+      const container = document.getElementById('folders-container');
+      container.innerHTML = state.folders.map(folder => `
+        <div class="folder-chip ${folder.id === state.activeFolderId ? 'active' : ''}" 
+             onclick="selectFolder('${folder.id}')">
+          ${folder.name}
+        </div>
+      `).join('') + `
+        <button class="btn-add-folder" onclick="openFolderModal()">+</button>
+      `;
+    };
+
+    const selectFolder = (id) => {
+      state.activeFolderId = id;
+      renderFolders();
+      refreshUI();
+    };
+
+    // --- РЕНДЕР КАРТОК ---
+    const createCardHTML = (option) => {
+      return `
+        <div class="card">
+          <div class="card-content">
+            <div class="card-header-row">
+              <div class="card-title">${option.text}</div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <span class="badge-count">${option.votes}</span>
+            <button class="btn-vote" onclick="vote('${option.id}')">+</button>
+            <button class="kebab-btn" onclick="toggleDropdown('${option.id}', event)">⋮</button>
+          </div>
+          
+          <div class="dropdown-menu" id="dropdown-${option.id}">
+            <button class="dropdown-item" onclick="openOptionModal('${option.id}')">✏️ Редагувати</button>
+            <button class="dropdown-item danger" onclick="deleteOption('${option.id}')">🗑️ Видалити</button>
+          </div>
+        </div>
+      `;
+    };
+
+    const refreshUI = () => {
+      const containerOptions = document.getElementById('tab-options');
+      const containerRating = document.getElementById('tab-rating');
+      
+      const filteredOptions = state.options.filter(opt => opt.folderId === state.activeFolderId);
+
+      if (filteredOptions.length === 0) {
+        const emptyMsg = '<div class="empty-state">У цій папці ще немає варіантів.</div>';
+        containerOptions.innerHTML = emptyMsg;
+        containerRating.innerHTML = emptyMsg;
+        return;
+      }
+
+      // Вкладка Варіанти (за часом)
+      const sortedByTime = [...filteredOptions].sort((a, b) => b.createdAt - a.createdAt);
+      containerOptions.innerHTML = sortedByTime.map(createCardHTML).join('');
+
+      // Вкладка Рейтинг (за голосами)
+      const sortedByVotes = [...filteredOptions].sort((a, b) => b.votes !== a.votes ? b.votes - a.votes : a.createdAt - b.createdAt);
+      containerRating.innerHTML = sortedByVotes.map(createCardHTML).join('');
+    };
+
+    // --- ЛОГІКА ДІЙ ---
+    const vote = (id) => {
+      const opt = state.options.find(o => o.id === id);
+      if (opt) {
+        opt.votes++;
+        saveData();
+        refreshUI();
       }
     };
 
-    const sendPushNotification = (title, body) => {
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification(title, {
-          body: body,
-          icon: 'icon-192.png' // шлях до іконки (якщо є)
-        });
-        
-        // Вібрація (працює на мобільних пристроях)
-        if ("vibrate" in navigator) navigator.vibrate(200);
+    const deleteOption = (id) => {
+      if(confirm('Видалити цей варіант?')) {
+        state.options = state.options.filter(o => o.id !== id);
+        saveData();
+        refreshUI();
       }
     };
 
-    // --- Функціонал CRUD ---
-    const addOption = () => {
-      const input = document.getElementById('option-input');
-      const text = input.value.trim();
-      if (text === '') return;
+    // --- КОНТЕКСТНЕ МЕНЮ (Три крапки) ---
+    const toggleDropdown = (id, event) => {
+      event.stopPropagation();
+      // Закриваємо всі інші
+      document.querySelectorAll('.dropdown-menu').forEach(el => {
+        if(el.id !== `dropdown-${id}`) el.classList.remove('active');
+      });
+      document.getElementById(`dropdown-${id}`).classList.toggle('active');
+    };
 
-      if (editingId) {
-        // Редагування існуючого
-        const option = businessOptions.find(opt => opt.id === editingId);
-        if (option) option.text = text;
-        editingId = null;
-        document.querySelector('.btn-add').innerText = 'Додати';
+    // Закриття меню при кліку будь-де
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.remove('active'));
+    });
+
+    // --- МОДАЛЬНІ ВІКНА ---
+    const openOptionModal = (editId = null) => {
+      state.editingOptionId = editId;
+      const input = document.getElementById('input-option');
+      const title = document.getElementById('modal-option-title');
+      
+      if (editId) {
+        const opt = state.options.find(o => o.id === editId);
+        input.value = opt.text;
+        title.innerText = 'Редагувати варіант';
       } else {
-        // Додавання нового
-        businessOptions.push({
+        input.value = '';
+        title.innerText = 'Новий варіант';
+      }
+      
+      document.getElementById('modal-option').classList.add('active');
+      setTimeout(() => input.focus(), 100);
+    };
+
+    const saveOption = () => {
+      const text = document.getElementById('input-option').value.trim();
+      if (!text) return;
+
+      if (state.editingOptionId) {
+        const opt = state.options.find(o => o.id === state.editingOptionId);
+        if (opt) opt.text = text;
+      } else {
+        state.options.push({
           id: Date.now().toString(),
+          folderId: state.activeFolderId,
           text: text,
           votes: 0,
           createdAt: Date.now()
         });
       }
 
-      saveToLocalStorage();
-      input.value = '';
+      saveData();
+      closeModal('modal-option');
       refreshUI();
-      requestNotificationPermission(); // Запитуємо дозвіл при першій активності
     };
 
-    document.getElementById('option-input').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') addOption();
-    });
-
-    // --- 2. Редагування та Видалення ---
-    const editOption = (id) => {
-      const option = businessOptions.find(opt => opt.id === id);
-      if (option) {
-        const input = document.getElementById('option-input');
-        input.value = option.text;
-        input.focus();
-        editingId = id;
-        document.querySelector('.btn-add').innerText = 'Зберегти';
-        switchTab('options'); // Перемикаємось на вкладку вводу, якщо були в рейтингу
-      }
+    const openFolderModal = () => {
+      document.getElementById('input-folder').value = '';
+      document.getElementById('modal-folder').classList.add('active');
+      setTimeout(() => document.getElementById('input-folder').focus(), 100);
     };
 
-    const deleteOption = (id) => {
-      if(confirm('Ви впевнені, що хочете видалити цей варіант?')) {
-        businessOptions = businessOptions.filter(opt => opt.id !== id);
-        saveToLocalStorage();
-        refreshUI();
-      }
+    const saveFolder = () => {
+      const name = document.getElementById('input-folder').value.trim();
+      if (!name) return;
+
+      const newFolder = { id: 'f_' + Date.now(), name: name };
+      state.folders.push(newFolder);
+      state.activeFolderId = newFolder.id; // Одразу перемикаємось на нову папку
+      
+      saveData();
+      closeModal('modal-folder');
+      renderFolders();
+      refreshUI();
     };
 
-    // --- Голосування ---
-    const vote = (id) => {
-      const option = businessOptions.find(opt => opt.id === id);
-      if (option) {
-        option.votes += 1;
-        saveToLocalStorage();
-        
-        // Логіка пуш-повідомлень: сповіщаємо, якщо варіант набирає кратну 5 кількість голосів (5, 10, 15...)
-        if (option.votes > 0 && option.votes % 5 === 0) {
-          sendPushNotification("🔥 Новий рекорд!", `Варіант "${option.text}" вже має ${option.votes} голосів!`);
-        }
-
-        refreshUI();
-      }
+    const closeModal = (modalId) => {
+      document.getElementById(modalId).classList.remove('active');
     };
 
-    // --- Рендеринг інтерфейсу ---
-    const createCardHTML = (option) => {
-      return `
-        <div class="card">
-          <div class="card-info">
-            <div class="card-text">${option.text}</div>
-            <div class="card-actions">
-              <button class="action-btn" onclick="editOption('${option.id}')" title="Редагувати">✏️</button>
-              <button class="action-btn" onclick="deleteOption('${option.id}')" title="Видалити">🗑️</button>
-            </div>
-          </div>
-          <div class="card-controls">
-            <span class="badge-count" id="vote-count-${option.id}">${option.votes}</span>
-            <button class="btn-vote" onclick="vote('${option.id}')">+</button>
-          </div>
-        </div>
-      `;
-    };
-
-    const renderOptions = () => {
-      const listElement = document.getElementById('options-list');
-      if (businessOptions.length === 0) {
-        listElement.innerHTML = '<div class="empty-state">Поки немає жодного варіанту. Додайте перший!</div>';
-        return;
-      }
-      const sortedByTime = [...businessOptions].sort((a, b) => b.createdAt - a.createdAt); // Нові зверху
-      listElement.innerHTML = sortedByTime.map(createCardHTML).join('');
-    };
-
-    const renderRating = () => {
-      const listElement = document.getElementById('rating-list');
-      if (businessOptions.length === 0) {
-        listElement.innerHTML = '<div class="empty-state">Немає даних для рейтингу.</div>';
-        return;
-      }
-      const sortedByVotes = [...businessOptions].sort((a, b) => b.votes !== a.votes ? b.votes - a.votes : a.createdAt - b.createdAt);
-      listElement.innerHTML = sortedByVotes.map(createCardHTML).join('');
-    };
-
-    const refreshUI = () => {
-      const activeTab = document.querySelector('.tab-content.active').id;
-      if (activeTab === 'tab-options') renderOptions();
-      else renderRating();
-    };
-
-    // --- Перемикання вкладок ---
+    // --- НАВІГАЦІЯ ---
     const switchTab = (tabName) => {
+      state.activeTab = tabName;
+      
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
       document.getElementById(`nav-${tabName}`).classList.add('active');
 
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.getElementById(`tab-${tabName}`).classList.add('active');
 
-      const headerTitle = document.getElementById('header-title');
-      if (tabName === 'options') {
-        headerTitle.innerText = 'Варіанти для бізнесу';
-        renderOptions();
-      } else {
-        headerTitle.innerText = 'Рейтинг варіантів';
-        renderRating();
-      }
+      document.getElementById('header-title').innerText = tabName === 'options' ? 'Варіанти для бізнесу' : 'Рейтинг варіантів';
     };
 
     // Ініціалізація
-    renderOptions();
+    renderFolders();
+    refreshUI();
   </script>
 </body>
 </html>
