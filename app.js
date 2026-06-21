@@ -4,9 +4,9 @@ if (window.Telegram && window.Telegram.WebApp) {
 }
 
 // Твій ключ API
-const AI_API_KEY = 'AQ.Ab8RN6KNiLBsE-8dJLDZ6AZYfD6M_VAEjSpj7_uQ_Mzy42Aeeg'; 
+const AI_API_KEY = 'AQ.Ab8RN6LJgHRHRsjbExLQOe7EctbPVK7CYFpYnIJJEHPsN2xeSg'; 
 // Виправлені лапки на зворотні (бектики ` `)
-const AI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${AI_API_KEY}`;
+const AI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${AQ.Ab8RN6LJgHRHRsjbExLQOe7EctbPVK7CYFpYnIJJEHPsN2xeSg}`;
 
 let state = {
   folders: JSON.parse(localStorage.getItem('biz_folders')) || [{ id: 'default', name: 'Загальні' }],
