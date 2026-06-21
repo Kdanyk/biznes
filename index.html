@@ -10,18 +10,22 @@
   <title>Бізнес Варіанти</title>
   <style>
     /* =========================================
-       Базові налаштування та Змінні
+       Базові Змінні та Glassmorphism
     ========================================= */
     :root {
-      --bg-color: var(--tg-theme-secondary-bg-color, #F3F4F6);
-      --card-bg: var(--tg-theme-bg-color, #FFFFFF);
-      --text-main: var(--tg-theme-text-color, #111827);
-      --text-muted: var(--tg-theme-hint-color, #6B7280);
+      --bg-color: var(--tg-theme-secondary-bg-color, #0f172a);
+      --text-main: var(--tg-theme-text-color, #f8fafc);
+      --text-muted: var(--tg-theme-hint-color, #94a3b8);
       --accent-blue: var(--tg-theme-button-color, #3B82F6);
+      --accent-purple: #8B5CF6;
       --accent-text: var(--tg-theme-button-text-color, #FFFFFF);
-      --border-color: rgba(107, 114, 128, 0.15);
       --danger-color: #EF4444;
-      --nav-height: 60px;
+      --nav-height: 65px;
+      
+      /* Змінні для скла */
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -33,15 +37,37 @@
       line-height: 1.5;
       overflow-x: hidden;
       padding-bottom: calc(var(--nav-height) + 20px);
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Анімовані фонові сфери для ефекту скла */
+    .bg-blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(70px);
+      z-index: -1;
+      opacity: 0.4;
+      animation: float 12s infinite alternate ease-in-out;
+      pointer-events: none;
+    }
+    .blob-1 { top: 5%; left: -10%; width: 250px; height: 250px; background: var(--accent-blue); }
+    .blob-2 { bottom: 15%; right: -10%; width: 300px; height: 300px; background: var(--accent-purple); animation-delay: -5s; }
+
+    @keyframes float {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(30px, 50px) scale(1.1); }
     }
 
     /* =========================================
-       Хедер та Папки (Горизонтальний скрол)
+       Хедер та Папки (Скляні)
     ========================================= */
     header {
-      background-color: var(--card-bg);
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--glass-border);
       padding-top: env(safe-area-inset-top);
-      border-bottom: 1px solid var(--border-color);
       position: sticky;
       top: 0;
       z-index: 40;
@@ -55,274 +81,233 @@
       overflow-x: auto;
       flex-wrap: nowrap;
       scroll-behavior: smooth;
-      -webkit-overflow-scrolling: touch; /* Плавний скрол на iOS */
+      -webkit-overflow-scrolling: touch;
       overscroll-behavior-x: contain;
+      scrollbar-width: none;
     }
-    
-    /* Ховаємо повзунок скролу */
     .folders-container::-webkit-scrollbar { display: none; }
-    .folders-container { scrollbar-width: none; }
 
     .folder-chip {
       display: inline-flex;
       align-items: center;
       gap: 6px;
       padding: 8px 16px;
-      background: var(--bg-color);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
       color: var(--text-muted);
       border-radius: 20px;
       font-size: 0.9rem;
       font-weight: 600;
       white-space: nowrap;
-      flex-shrink: 0; /* Важливо для скролінгу */
+      flex-shrink: 0;
       cursor: pointer;
-      border: 1px solid transparent;
-      transition: all 0.2s;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
     }
 
     .folder-chip.active {
-      background: var(--accent-blue);
-      color: var(--accent-text);
+      background: rgba(59, 130, 246, 0.2);
+      border-color: var(--accent-blue);
+      color: var(--text-main);
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
     }
 
-    /* Кнопка видалення всередині папки */
     .btn-delete-folder {
-      background: none;
-      border: none;
-      color: inherit;
-      font-size: 1.2rem;
-      line-height: 1;
-      margin-left: 2px;
-      padding: 0 4px;
-      opacity: 0.8;
-      cursor: pointer;
+      background: none; border: none; color: inherit; font-size: 1.2rem;
+      line-height: 1; margin-left: 2px; padding: 0 4px; opacity: 0.8; cursor: pointer;
     }
     .btn-delete-folder:active { opacity: 0.5; }
 
     .btn-add-folder {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      min-width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: none;
-      border: 1px dashed var(--text-muted);
-      color: var(--text-muted);
-      font-size: 1.2rem;
-      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      min-width: 36px; height: 36px; border-radius: 50%; background: none;
+      border: 1px dashed var(--text-muted); color: var(--text-muted);
+      font-size: 1.2rem; cursor: pointer;
     }
 
     /* =========================================
        Контент та Картки
     ========================================= */
-    main { padding: 16px; max-width: 600px; margin: 0 auto; }
+    main { padding: 16px; max-width: 600px; margin: 0 auto; position: relative; z-index: 10; }
 
-    .tab-content { display: none; animation: fadeIn 0.2s ease forwards; }
-    .tab-content.active { display: flex; flex-direction: column; gap: 10px; }
+    .tab-content { display: none; animation: fadeIn 0.3s ease forwards; }
+    .tab-content.active { display: flex; flex-direction: column; gap: 12px; }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(5px); }
+      from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
     .card {
-      background: var(--card-bg);
-      border-radius: 14px;
-      padding: 14px 16px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border: 1px solid var(--border-color);
+      box-shadow: var(--glass-shadow);
       position: relative;
     }
 
-    .card-content { flex: 1; padding-right: 12px; }
-    
+    .card-content { flex: 1; padding-right: 12px; display: flex; flex-direction: column; gap: 4px;}
     .card-title { font-size: 1rem; font-weight: 600; word-break: break-word; }
     
-    .kebab-btn {
-      background: none;
-      border: none;
+    .folder-badge {
+      align-self: flex-start;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
       color: var(--text-muted);
-      font-size: 1.2rem;
-      cursor: pointer;
-      padding: 0 4px;
-      line-height: 1;
+      border: 1px solid var(--glass-border);
+    }
+    
+    .kebab-btn {
+      background: none; border: none; color: var(--text-muted); font-size: 1.2rem;
+      cursor: pointer; padding: 0 4px; line-height: 1;
     }
 
-    .card-actions {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
+    .card-actions { display: flex; align-items: center; gap: 12px; }
     .badge-count { font-size: 1.1rem; font-weight: 700; min-width: 24px; text-align: center; }
 
     .btn-vote {
-      background-color: rgba(59, 130, 246, 0.1);
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
       color: var(--accent-blue);
-      border: none;
       border-radius: 50%;
-      width: 36px;
-      height: 36px;
+      width: 38px; height: 38px;
       font-size: 1.4rem;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
+      display: flex; justify-content: center; align-items: center; cursor: pointer;
+      backdrop-filter: blur(4px);
     }
 
     /* =========================================
-       Контекстне меню (Три крапки)
+       Контекстне меню
     ========================================= */
     .dropdown-menu {
-      position: absolute;
-      top: 35px;
-      right: 16px;
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
+      position: absolute; top: 35px; right: 16px;
+      background: var(--bg-color); /* Солідний фон для читабельності */
+      border: 1px solid var(--glass-border);
       border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      z-index: 20;
-      display: none;
-      flex-direction: column;
-      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 20; display: none; flex-direction: column; overflow: hidden;
     }
     .dropdown-menu.active { display: flex; animation: fadeIn 0.1s; }
 
     .dropdown-item {
-      padding: 10px 16px;
-      font-size: 0.9rem;
-      border: none;
-      background: none;
-      text-align: left;
-      color: var(--text-main);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      padding: 12px 16px; font-size: 0.9rem; border: none; background: none;
+      text-align: left; color: var(--text-main); cursor: pointer; display: flex; gap: 8px;
     }
-    .dropdown-item:active { background: var(--bg-color); }
+    .dropdown-item:active { background: rgba(255,255,255,0.05); }
     .dropdown-item.danger { color: var(--danger-color); }
-    .dropdown-item:not(:last-child) { border-bottom: 1px solid var(--border-color); }
+    .dropdown-item:not(:last-child) { border-bottom: 1px solid var(--glass-border); }
 
     /* =========================================
-       FAB (Плаваюча кнопка)
+       Liquid Glass FAB
     ========================================= */
     .fab {
       position: fixed;
       bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 16px);
       right: 16px;
-      width: 56px;
-      height: 56px;
-      background-color: var(--accent-blue);
-      color: var(--accent-text);
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-      cursor: pointer;
-      z-index: 30;
-      transition: transform 0.2s;
+      width: 60px; height: 60px;
+      background: rgba(59, 130, 246, 0.3);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: var(--text-main);
+      display: flex; justify-content: center; align-items: center;
+      box-shadow: 0 8px 32px rgba(59, 130, 246, 0.4);
+      cursor: pointer; z-index: 30;
+      animation: liquidMorph 4s ease-in-out infinite;
+      transition: transform 0.2s, opacity 0.3s;
     }
     .fab:active { transform: scale(0.9); }
-    .fab svg { width: 24px; height: 24px; fill: currentColor; }
+    .fab svg { width: 28px; height: 28px; fill: currentColor; }
+
+    @keyframes liquidMorph {
+      0%, 100% { border-radius: 50%; }
+      25% { border-radius: 54% 46% 40% 60% / 55% 45% 55% 45%; }
+      50% { border-radius: 45% 55% 65% 35% / 40% 60% 40% 60%; }
+      75% { border-radius: 50% 50% 30% 70% / 60% 40% 60% 40%; }
+    }
 
     /* =========================================
-       Модальні Вікна
+       Модальні Вікна (Скло)
     ========================================= */
     .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(2px);
-      z-index: 100;
-      display: none;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px);
+      z-index: 100; display: none; justify-content: center; align-items: center; padding: 20px;
     }
     .modal-overlay.active { display: flex; }
 
     .modal-box {
-      background: var(--card-bg);
-      width: 100%;
-      max-width: 400px;
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-      animation: slideUp 0.2s ease;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      width: 100%; max-width: 400px; border-radius: 20px; padding: 24px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     @keyframes slideUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(30px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; }
+    .modal-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; }
     
     .modal-input {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      background: var(--bg-color);
-      color: var(--text-main);
-      font-size: 1rem;
-      margin-bottom: 16px;
-      outline: none;
+      width: 100%; padding: 14px 16px;
+      border: 1px solid var(--glass-border); border-radius: 12px;
+      background: rgba(0,0,0,0.2); color: var(--text-main);
+      font-size: 1rem; margin-bottom: 20px; outline: none;
+      transition: border-color 0.2s;
     }
     .modal-input:focus { border-color: var(--accent-blue); }
 
-    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
     
-    .btn-modal {
-      padding: 10px 16px;
-      border-radius: 10px;
-      font-weight: 600;
-      border: none;
-      cursor: pointer;
-    }
-    .btn-cancel { background: var(--bg-color); color: var(--text-main); }
+    .btn-modal { padding: 12px 20px; border-radius: 12px; font-weight: 600; border: none; cursor: pointer; }
+    .btn-cancel { background: rgba(255,255,255,0.1); color: var(--text-main); }
     .btn-save { background: var(--accent-blue); color: var(--accent-text); }
 
     /* =========================================
-       Нижня Навігація
+       Нижня Навігація (Скло)
     ========================================= */
     .bottom-nav {
-      position: fixed;
-      bottom: 0; left: 0; width: 100%;
+      position: fixed; bottom: 0; left: 0; width: 100%;
       height: calc(var(--nav-height) + env(safe-area-inset-bottom));
-      background-color: var(--card-bg);
-      border-top: 1px solid var(--border-color);
-      display: flex;
-      justify-content: space-around;
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--glass-border);
+      display: flex; justify-content: space-around;
       padding-bottom: env(safe-area-inset-bottom);
       z-index: 40;
     }
 
     .nav-item {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      color: var(--text-muted);
-      font-size: 0.75rem;
-      font-weight: 600;
-      gap: 4px;
-      cursor: pointer;
+      flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
+      color: var(--text-muted); font-size: 0.75rem; font-weight: 600; gap: 6px; cursor: pointer;
+      transition: color 0.3s;
     }
-    .nav-item svg { fill: currentColor; width: 22px; height: 22px; }
+    .nav-item svg { fill: currentColor; width: 24px; height: 24px; transition: transform 0.2s;}
     .nav-item.active { color: var(--accent-blue); }
+    .nav-item.active svg { transform: translateY(-2px); }
 
-    .empty-state { text-align: center; color: var(--text-muted); margin-top: 40px; font-size: 0.95rem; }
+    .empty-state { text-align: center; color: var(--text-muted); margin-top: 60px; font-size: 0.95rem; }
   </style>
 </head>
 <body>
+
+  <div class="bg-blob blob-1"></div>
+  <div class="bg-blob blob-2"></div>
 
   <header>
     <div class="folders-container" id="folders-container"></div>
@@ -333,7 +318,7 @@
     <section id="tab-rating" class="tab-content"></section>
   </main>
 
-  <div class="fab" onclick="openOptionModal()">
+  <div class="fab" id="fab-add" onclick="openOptionModal()">
     <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
   </div>
 
@@ -396,8 +381,6 @@
       const foldersHTML = state.folders.map(folder => {
         const isActive = folder.id === state.activeFolderId;
         const isDefault = folder.id === 'default';
-        
-        // Показуємо хрестик видалення тільки якщо папка активна і вона не 'Загальні'
         const deleteBtnHTML = (isActive && !isDefault) 
           ? `<button class="btn-delete-folder" onclick="deleteFolder('${folder.id}', event)">×</button>` 
           : '';
@@ -420,11 +403,11 @@
     };
 
     const deleteFolder = (id, event) => {
-      event.stopPropagation(); // Забороняємо кліку переходити на саму папку
+      event.stopPropagation();
       if(confirm('Ви впевнені, що хочете видалити цю папку та всі її варіанти?')) {
         state.folders = state.folders.filter(f => f.id !== id);
         state.options = state.options.filter(o => o.folderId !== id);
-        state.activeFolderId = 'default'; // Повертаємось на базову папку
+        state.activeFolderId = 'default';
         saveData();
         renderFolders();
         refreshUI();
@@ -433,9 +416,19 @@
 
     // --- РЕНДЕР КАРТОК ---
     const createCardHTML = (option) => {
+      // Показуємо бейдж з ім'ям папки, якщо ми в "Загальні", але варіант з іншої папки
+      let folderBadge = '';
+      if (state.activeFolderId === 'default' && option.folderId !== 'default') {
+        const parentFolder = state.folders.find(f => f.id === option.folderId);
+        if (parentFolder) {
+          folderBadge = `<div class="folder-badge">${parentFolder.name}</div>`;
+        }
+      }
+
       return `
         <div class="card">
           <div class="card-content">
+            ${folderBadge}
             <div class="card-title">${option.text}</div>
           </div>
           <div class="card-actions">
@@ -455,7 +448,19 @@
     const refreshUI = () => {
       const containerOptions = document.getElementById('tab-options');
       const containerRating = document.getElementById('tab-rating');
-      const filteredOptions = state.options.filter(opt => opt.folderId === state.activeFolderId);
+      const fab = document.getElementById('fab-add');
+      
+      // Якщо обрано 'Загальні', беремо всі варіанти, інакше - тільки з конкретної папки
+      const filteredOptions = state.activeFolderId === 'default' 
+        ? state.options 
+        : state.options.filter(opt => opt.folderId === state.activeFolderId);
+
+      // Ховаємо кнопку "+" якщо активна папка 'Загальні'
+      if (state.activeFolderId === 'default') {
+        fab.style.display = 'none';
+      } else {
+        fab.style.display = 'flex';
+      }
 
       if (filteredOptions.length === 0) {
         const emptyMsg = '<div class="empty-state">Тут поки порожньо. Додайте перший варіант!</div>';
@@ -474,18 +479,13 @@
     // --- ЛОГІКА ДІЙ ---
     const vote = (id) => {
       const opt = state.options.find(o => o.id === id);
-      if (opt) {
-        opt.votes++;
-        saveData();
-        refreshUI();
-      }
+      if (opt) { opt.votes++; saveData(); refreshUI(); }
     };
 
     const deleteOption = (id) => {
       if(confirm('Видалити цей варіант?')) {
         state.options = state.options.filter(o => o.id !== id);
-        saveData();
-        refreshUI();
+        saveData(); refreshUI();
       }
     };
 
@@ -503,6 +503,9 @@
 
     // --- МОДАЛЬНІ ВІКНА ---
     const openOptionModal = (editId = null) => {
+      // Забороняємо відкривати модалку створення, якщо активна папка Загальні
+      if (!editId && state.activeFolderId === 'default') return;
+
       state.editingOptionId = editId;
       const input = document.getElementById('input-option');
       const title = document.getElementById('modal-option-title');
@@ -537,9 +540,7 @@
         });
       }
 
-      saveData();
-      closeModal('modal-option');
-      refreshUI();
+      saveData(); closeModal('modal-option'); refreshUI();
     };
 
     const openFolderModal = () => {
@@ -556,15 +557,10 @@
       state.folders.push(newFolder);
       state.activeFolderId = newFolder.id; 
       
-      saveData();
-      closeModal('modal-folder');
-      renderFolders();
-      refreshUI();
+      saveData(); closeModal('modal-folder'); renderFolders(); refreshUI();
     };
 
-    const closeModal = (modalId) => {
-      document.getElementById(modalId).classList.remove('active');
-    };
+    const closeModal = (modalId) => { document.getElementById(modalId).classList.remove('active'); };
 
     // --- НАВІГАЦІЯ ---
     const switchTab = (tabName) => {
@@ -576,8 +572,7 @@
     };
 
     // Ініціалізація
-    renderFolders();
-    refreshUI();
+    renderFolders(); refreshUI();
   </script>
 </body>
 </html>
