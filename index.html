@@ -10,19 +10,21 @@
   <meta name="apple-mobile-web-app-title" content="Бізнес Оцінка">
   <link rel="manifest" href="manifest.json">
   
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
   <title>Бізнес Варіанти</title>
   <style>
     /* =========================================
-       Базові налаштування та змінні
+       Базові налаштування та змінні (Telegram Ready)
     ========================================= */
     :root {
-      --bg-color: #F9FAFB;
-      --card-bg: #FFFFFF;
-      --text-main: #1F2937;
-      --text-muted: #6B7280;
-      --accent-blue: #3B82F6;
-      --accent-blue-hover: #2563EB;
-      --border-color: #E5E7EB;
+      --bg-color: var(--tg-theme-secondary-bg-color, #F9FAFB);
+      --card-bg: var(--tg-theme-bg-color, #FFFFFF);
+      --text-main: var(--tg-theme-text-color, #1F2937);
+      --text-muted: var(--tg-theme-hint-color, #6B7280);
+      --accent-blue: var(--tg-theme-button-color, #3B82F6);
+      --accent-text: var(--tg-theme-button-text-color, #FFFFFF);
+      --border-color: var(--tg-theme-hint-color, #E5E7EB);
       --nav-height: 65px;
     }
 
@@ -31,7 +33,7 @@
     body {
       background-color: var(--bg-color);
       color: var(--text-main);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
@@ -45,13 +47,13 @@
       padding: env(safe-area-inset-top) 20px 16px;
       padding-top: calc(env(safe-area-inset-top) + 20px);
       text-align: center;
-      border-bottom: 1px solid var(--border-color);
+      border-bottom: 1px solid rgba(107, 114, 128, 0.2);
       position: sticky;
       top: 0;
       z-index: 10;
     }
 
-    header h1 { font-size: 1.25rem; font-weight: 700; color: #111827; }
+    header h1 { font-size: 1.25rem; font-weight: 700; color: var(--text-main); }
 
     main {
       padding: 20px 20px calc(var(--nav-height) + env(safe-area-inset-bottom) + 20px);
@@ -63,10 +65,7 @@
        Анімації та Вкладки
     ========================================= */
     .tab-content { display: none; }
-    .tab-content.active { 
-      display: block; 
-      animation: fadeIn 0.3s ease forwards; 
-    }
+    .tab-content.active { display: block; animation: fadeIn 0.3s ease forwards; }
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
@@ -76,38 +75,33 @@
     /* =========================================
        Форма введення
     ========================================= */
-    .input-group {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 24px;
-    }
+    .input-group { display: flex; gap: 10px; margin-bottom: 24px; }
 
     input[type="text"] {
       flex: 1;
       padding: 14px 16px;
-      border: 1px solid var(--border-color);
+      border: 1px solid rgba(107, 114, 128, 0.3);
       border-radius: 12px;
       font-size: 1rem;
       background: var(--card-bg);
+      color: var(--text-main);
       outline: none;
-      transition: border-color 0.2s;
     }
 
+    input[type="text"]::placeholder { color: var(--text-muted); }
     input[type="text"]:focus { border-color: var(--accent-blue); }
 
     .btn-add {
       background-color: var(--accent-blue);
-      color: #FFF;
+      color: var(--accent-text);
       border: none;
       border-radius: 12px;
       padding: 0 20px;
       font-weight: 600;
       font-size: 1rem;
       cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
     }
-
-    .btn-add:active { transform: scale(0.95); }
+    .btn-add:active { transform: scale(0.95); opacity: 0.8; }
 
     /* =========================================
        Список карток
@@ -118,27 +112,27 @@
       background: var(--card-bg);
       border-radius: 16px;
       padding: 16px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.04);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border: 1px solid var(--border-color);
+      border: 1px solid rgba(107, 114, 128, 0.15);
+      gap: 15px;
     }
 
-    .card-text { font-size: 1rem; font-weight: 500; word-break: break-word; padding-right: 15px;}
+    .card-info { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .card-text { font-size: 1rem; font-weight: 500; word-break: break-word; }
+    
+    .card-actions { display: flex; gap: 12px; }
+    .action-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; opacity: 0.5; transition: opacity 0.2s; padding: 0;}
+    .action-btn:active { opacity: 1; transform: scale(0.9); }
 
     .card-controls { display: flex; align-items: center; gap: 12px; }
 
-    .badge-count {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--text-main);
-      min-width: 24px;
-      text-align: center;
-    }
+    .badge-count { font-size: 1.1rem; font-weight: 700; color: var(--text-main); min-width: 24px; text-align: center; }
 
     .btn-vote {
-      background-color: #EFF6FF;
+      background-color: rgba(59, 130, 246, 0.1);
       color: var(--accent-blue);
       border: none;
       border-radius: 50%;
@@ -149,14 +143,8 @@
       justify-content: center;
       align-items: center;
       cursor: pointer;
-      transition: all 0.15s ease;
     }
-
-    .btn-vote:active {
-      transform: scale(0.85);
-      background-color: var(--accent-blue);
-      color: #FFF;
-    }
+    .btn-vote:active { transform: scale(0.85); background-color: var(--accent-blue); color: var(--accent-text); }
 
     .empty-state { text-align: center; color: var(--text-muted); margin-top: 40px; font-size: 0.95rem; }
 
@@ -170,7 +158,7 @@
       width: 100%;
       height: calc(var(--nav-height) + env(safe-area-inset-bottom));
       background-color: var(--card-bg);
-      border-top: 1px solid var(--border-color);
+      border-top: 1px solid rgba(107, 114, 128, 0.2);
       display: flex;
       justify-content: space-around;
       padding-bottom: env(safe-area-inset-bottom);
@@ -184,12 +172,10 @@
       justify-content: center;
       align-items: center;
       color: var(--text-muted);
-      text-decoration: none;
       font-size: 0.75rem;
       font-weight: 600;
       gap: 4px;
       cursor: pointer;
-      transition: color 0.2s;
     }
 
     .nav-item svg { fill: currentColor; width: 24px; height: 24px; }
@@ -228,63 +214,118 @@
   </nav>
 
   <script>
-    // Ініціалізація даних з localStorage
-    let businessOptions = JSON.parse(localStorage.getItem('business_options')) || [];
+    // --- 1. Ініціалізація Telegram Web App ---
+    const tg = window.Telegram.WebApp;
+    tg.ready(); 
+    tg.expand(); // Розгортаємо додаток на весь екран
 
-    // Збереження даних
+    // --- Локальні дані ---
+    let businessOptions = JSON.parse(localStorage.getItem('business_options')) || [];
+    let editingId = null; // Змінна для збереження ID варіанту, який редагується
+
     const saveToLocalStorage = () => {
       localStorage.setItem('business_options', JSON.stringify(businessOptions));
     };
 
-    // Додавання нового варіанту
+    // --- 3. Система Пуш-повідомлень (Notification API) ---
+    const requestNotificationPermission = () => {
+      if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+        Notification.requestPermission();
+      }
+    };
+
+    const sendPushNotification = (title, body) => {
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(title, {
+          body: body,
+          icon: 'icon-192.png' // шлях до іконки (якщо є)
+        });
+        
+        // Вібрація (працює на мобільних пристроях)
+        if ("vibrate" in navigator) navigator.vibrate(200);
+      }
+    };
+
+    // --- Функціонал CRUD ---
     const addOption = () => {
       const input = document.getElementById('option-input');
       const text = input.value.trim();
-      
       if (text === '') return;
 
-      const newOption = {
-        id: Date.now().toString(),
-        text: text,
-        votes: 0,
-        createdAt: Date.now()
-      };
+      if (editingId) {
+        // Редагування існуючого
+        const option = businessOptions.find(opt => opt.id === editingId);
+        if (option) option.text = text;
+        editingId = null;
+        document.querySelector('.btn-add').innerText = 'Додати';
+      } else {
+        // Додавання нового
+        businessOptions.push({
+          id: Date.now().toString(),
+          text: text,
+          votes: 0,
+          createdAt: Date.now()
+        });
+      }
 
-      businessOptions.push(newOption);
       saveToLocalStorage();
       input.value = '';
-      
-      renderOptions();
+      refreshUI();
+      requestNotificationPermission(); // Запитуємо дозвіл при першій активності
     };
 
-    // Обробка натискання Enter в інпуті
-    document.getElementById('option-input').addEventListener('keypress', function(e) {
+    document.getElementById('option-input').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') addOption();
     });
 
-    // Збільшення лічильника
+    // --- 2. Редагування та Видалення ---
+    const editOption = (id) => {
+      const option = businessOptions.find(opt => opt.id === id);
+      if (option) {
+        const input = document.getElementById('option-input');
+        input.value = option.text;
+        input.focus();
+        editingId = id;
+        document.querySelector('.btn-add').innerText = 'Зберегти';
+        switchTab('options'); // Перемикаємось на вкладку вводу, якщо були в рейтингу
+      }
+    };
+
+    const deleteOption = (id) => {
+      if(confirm('Ви впевнені, що хочете видалити цей варіант?')) {
+        businessOptions = businessOptions.filter(opt => opt.id !== id);
+        saveToLocalStorage();
+        refreshUI();
+      }
+    };
+
+    // --- Голосування ---
     const vote = (id) => {
       const option = businessOptions.find(opt => opt.id === id);
       if (option) {
         option.votes += 1;
         saveToLocalStorage();
         
-        // Оновлюємо UI залежно від активної вкладки
-        const activeTab = document.querySelector('.tab-content.active').id;
-        if (activeTab === 'tab-options') {
-          // Оновлюємо тільки цифру, щоб уникнути перемальовування всього списку та втрати фокусу
-          document.getElementById(`vote-count-${id}`).innerText = option.votes;
-        } else {
-          renderRating(); // В рейтингу треба перемалювати для сортування
+        // Логіка пуш-повідомлень: сповіщаємо, якщо варіант набирає кратну 5 кількість голосів (5, 10, 15...)
+        if (option.votes > 0 && option.votes % 5 === 0) {
+          sendPushNotification("🔥 Новий рекорд!", `Варіант "${option.text}" вже має ${option.votes} голосів!`);
         }
+
+        refreshUI();
       }
     };
 
-    // Генерація HTML для однієї картки
+    // --- Рендеринг інтерфейсу ---
     const createCardHTML = (option) => {
       return `
         <div class="card">
-          <div class="card-text">${option.text}</div>
+          <div class="card-info">
+            <div class="card-text">${option.text}</div>
+            <div class="card-actions">
+              <button class="action-btn" onclick="editOption('${option.id}')" title="Редагувати">✏️</button>
+              <button class="action-btn" onclick="deleteOption('${option.id}')" title="Видалити">🗑️</button>
+            </div>
+          </div>
           <div class="card-controls">
             <span class="badge-count" id="vote-count-${option.id}">${option.votes}</span>
             <button class="btn-vote" onclick="vote('${option.id}')">+</button>
@@ -293,49 +334,40 @@
       `;
     };
 
-    // Рендер списку "Варіанти"
     const renderOptions = () => {
       const listElement = document.getElementById('options-list');
       if (businessOptions.length === 0) {
         listElement.innerHTML = '<div class="empty-state">Поки немає жодного варіанту. Додайте перший!</div>';
         return;
       }
-      
-      // Сортуємо за часом додавання (нові знизу)
-      const sortedByTime = [...businessOptions].sort((a, b) => a.createdAt - b.createdAt);
+      const sortedByTime = [...businessOptions].sort((a, b) => b.createdAt - a.createdAt); // Нові зверху
       listElement.innerHTML = sortedByTime.map(createCardHTML).join('');
     };
 
-    // Рендер списку "Рейтинг"
     const renderRating = () => {
       const listElement = document.getElementById('rating-list');
       if (businessOptions.length === 0) {
         listElement.innerHTML = '<div class="empty-state">Немає даних для рейтингу.</div>';
         return;
       }
-
-      // Сортування: 1) за голосами (спадання), 2) за часом додавання (зростання)
-      const sortedByVotes = [...businessOptions].sort((a, b) => {
-        if (b.votes !== a.votes) {
-          return b.votes - a.votes;
-        }
-        return a.createdAt - b.createdAt;
-      });
-
+      const sortedByVotes = [...businessOptions].sort((a, b) => b.votes !== a.votes ? b.votes - a.votes : a.createdAt - b.createdAt);
       listElement.innerHTML = sortedByVotes.map(createCardHTML).join('');
     };
 
-    // Логіка перемикання вкладок
+    const refreshUI = () => {
+      const activeTab = document.querySelector('.tab-content.active').id;
+      if (activeTab === 'tab-options') renderOptions();
+      else renderRating();
+    };
+
+    // --- Перемикання вкладок ---
     const switchTab = (tabName) => {
-      // Оновлення активного стану кнопок навігації
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
       document.getElementById(`nav-${tabName}`).classList.add('active');
 
-      // Оновлення активної вкладки з анімацією
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.getElementById(`tab-${tabName}`).classList.add('active');
 
-      // Зміна заголовка та рендер відповідних даних
       const headerTitle = document.getElementById('header-title');
       if (tabName === 'options') {
         headerTitle.innerText = 'Варіанти для бізнесу';
@@ -346,7 +378,7 @@
       }
     };
 
-    // Ініціалізація при завантаженні
+    // Ініціалізація
     renderOptions();
   </script>
 </body>
