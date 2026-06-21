@@ -36,7 +36,7 @@
     }
 
     /* =========================================
-       Хедер та Папки
+       Хедер та Папки (Горизонтальний скрол)
     ========================================= */
     header {
       background-color: var(--card-bg);
@@ -47,31 +47,34 @@
       z-index: 40;
     }
 
-    .header-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      text-align: center;
-      padding: 12px 20px;
-    }
-
     .folders-container {
       display: flex;
       align-items: center;
-      padding: 8px 16px 12px;
-      gap: 8px;
+      padding: 12px 16px;
+      gap: 10px;
       overflow-x: auto;
-      scrollbar-width: none;
+      flex-wrap: nowrap;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch; /* Плавний скрол на iOS */
+      overscroll-behavior-x: contain;
     }
+    
+    /* Ховаємо повзунок скролу */
     .folders-container::-webkit-scrollbar { display: none; }
+    .folders-container { scrollbar-width: none; }
 
     .folder-chip {
-      padding: 6px 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
       background: var(--bg-color);
       color: var(--text-muted);
       border-radius: 20px;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 600;
       white-space: nowrap;
+      flex-shrink: 0; /* Важливо для скролінгу */
       cursor: pointer;
       border: 1px solid transparent;
       transition: all 0.2s;
@@ -82,12 +85,27 @@
       color: var(--accent-text);
     }
 
+    /* Кнопка видалення всередині папки */
+    .btn-delete-folder {
+      background: none;
+      border: none;
+      color: inherit;
+      font-size: 1.2rem;
+      line-height: 1;
+      margin-left: 2px;
+      padding: 0 4px;
+      opacity: 0.8;
+      cursor: pointer;
+    }
+    .btn-delete-folder:active { opacity: 0.5; }
+
     .btn-add-folder {
       display: flex;
       align-items: center;
       justify-content: center;
-      min-width: 32px;
-      height: 32px;
+      flex-shrink: 0;
+      min-width: 36px;
+      height: 36px;
       border-radius: 50%;
       background: none;
       border: 1px dashed var(--text-muted);
@@ -122,13 +140,6 @@
 
     .card-content { flex: 1; padding-right: 12px; }
     
-    .card-header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 4px;
-    }
-
     .card-title { font-size: 1rem; font-weight: 600; word-break: break-word; }
     
     .kebab-btn {
@@ -314,9 +325,7 @@
 <body>
 
   <header>
-    <div class="header-title" id="header-title">Варіанти для бізнесу</div>
-    <div class="folders-container" id="folders-container">
-      </div>
+    <div class="folders-container" id="folders-container"></div>
   </header>
 
   <main>
@@ -342,7 +351,7 @@
   <div class="modal-overlay" id="modal-option">
     <div class="modal-box">
       <div class="modal-title" id="modal-option-title">Новий варіант</div>
-      <input type="text" class="modal-input" id="input-option" placeholder="Введіть назву...">
+      <input type="text" class="modal-input" id="input-option" placeholder="Введіть назву..." autocomplete="off">
       <div class="modal-actions">
         <button class="btn-modal btn-cancel" onclick="closeModal('modal-option')">Скасувати</button>
         <button class="btn-modal btn-save" onclick="saveOption()">Зберегти</button>
@@ -353,7 +362,7 @@
   <div class="modal-overlay" id="modal-folder">
     <div class="modal-box">
       <div class="modal-title">Нова папка</div>
-      <input type="text" class="modal-input" id="input-folder" placeholder="Назва папки...">
+      <input type="text" class="modal-input" id="input-folder" placeholder="Назва папки..." autocomplete="off">
       <div class="modal-actions">
         <button class="btn-modal btn-cancel" onclick="closeModal('modal-folder')">Скасувати</button>
         <button class="btn-modal btn-save" onclick="saveFolder()">Створити</button>
@@ -362,13 +371,11 @@
   </div>
 
   <script>
-    // Ініціалізація Telegram
     if (window.Telegram && window.Telegram.WebApp) {
       window.Telegram.WebApp.ready();
       window.Telegram.WebApp.expand();
     }
 
-    // Стейт додатку
     let state = {
       folders: JSON.parse(localStorage.getItem('biz_folders')) || [{ id: 'default', name: 'Загальні' }],
       options: JSON.parse(localStorage.getItem('biz_options')) || [],
@@ -385,14 +392,25 @@
     // --- РЕНДЕР ПАПОК ---
     const renderFolders = () => {
       const container = document.getElementById('folders-container');
-      container.innerHTML = state.folders.map(folder => `
-        <div class="folder-chip ${folder.id === state.activeFolderId ? 'active' : ''}" 
-             onclick="selectFolder('${folder.id}')">
-          ${folder.name}
-        </div>
-      `).join('') + `
-        <button class="btn-add-folder" onclick="openFolderModal()">+</button>
-      `;
+      
+      const foldersHTML = state.folders.map(folder => {
+        const isActive = folder.id === state.activeFolderId;
+        const isDefault = folder.id === 'default';
+        
+        // Показуємо хрестик видалення тільки якщо папка активна і вона не 'Загальні'
+        const deleteBtnHTML = (isActive && !isDefault) 
+          ? `<button class="btn-delete-folder" onclick="deleteFolder('${folder.id}', event)">×</button>` 
+          : '';
+
+        return `
+          <div class="folder-chip ${isActive ? 'active' : ''}" onclick="selectFolder('${folder.id}')">
+            ${folder.name}
+            ${deleteBtnHTML}
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = foldersHTML + `<button class="btn-add-folder" onclick="openFolderModal()">+</button>`;
     };
 
     const selectFolder = (id) => {
@@ -401,14 +419,24 @@
       refreshUI();
     };
 
+    const deleteFolder = (id, event) => {
+      event.stopPropagation(); // Забороняємо кліку переходити на саму папку
+      if(confirm('Ви впевнені, що хочете видалити цю папку та всі її варіанти?')) {
+        state.folders = state.folders.filter(f => f.id !== id);
+        state.options = state.options.filter(o => o.folderId !== id);
+        state.activeFolderId = 'default'; // Повертаємось на базову папку
+        saveData();
+        renderFolders();
+        refreshUI();
+      }
+    };
+
     // --- РЕНДЕР КАРТОК ---
     const createCardHTML = (option) => {
       return `
         <div class="card">
           <div class="card-content">
-            <div class="card-header-row">
-              <div class="card-title">${option.text}</div>
-            </div>
+            <div class="card-title">${option.text}</div>
           </div>
           <div class="card-actions">
             <span class="badge-count">${option.votes}</span>
@@ -427,21 +455,18 @@
     const refreshUI = () => {
       const containerOptions = document.getElementById('tab-options');
       const containerRating = document.getElementById('tab-rating');
-      
       const filteredOptions = state.options.filter(opt => opt.folderId === state.activeFolderId);
 
       if (filteredOptions.length === 0) {
-        const emptyMsg = '<div class="empty-state">У цій папці ще немає варіантів.</div>';
+        const emptyMsg = '<div class="empty-state">Тут поки порожньо. Додайте перший варіант!</div>';
         containerOptions.innerHTML = emptyMsg;
         containerRating.innerHTML = emptyMsg;
         return;
       }
 
-      // Вкладка Варіанти (за часом)
       const sortedByTime = [...filteredOptions].sort((a, b) => b.createdAt - a.createdAt);
       containerOptions.innerHTML = sortedByTime.map(createCardHTML).join('');
 
-      // Вкладка Рейтинг (за голосами)
       const sortedByVotes = [...filteredOptions].sort((a, b) => b.votes !== a.votes ? b.votes - a.votes : a.createdAt - b.createdAt);
       containerRating.innerHTML = sortedByVotes.map(createCardHTML).join('');
     };
@@ -464,17 +489,14 @@
       }
     };
 
-    // --- КОНТЕКСТНЕ МЕНЮ (Три крапки) ---
     const toggleDropdown = (id, event) => {
       event.stopPropagation();
-      // Закриваємо всі інші
       document.querySelectorAll('.dropdown-menu').forEach(el => {
         if(el.id !== `dropdown-${id}`) el.classList.remove('active');
       });
       document.getElementById(`dropdown-${id}`).classList.toggle('active');
     };
 
-    // Закриття меню при кліку будь-де
     document.addEventListener('click', () => {
       document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.remove('active'));
     });
@@ -532,7 +554,7 @@
 
       const newFolder = { id: 'f_' + Date.now(), name: name };
       state.folders.push(newFolder);
-      state.activeFolderId = newFolder.id; // Одразу перемикаємось на нову папку
+      state.activeFolderId = newFolder.id; 
       
       saveData();
       closeModal('modal-folder');
@@ -547,14 +569,10 @@
     // --- НАВІГАЦІЯ ---
     const switchTab = (tabName) => {
       state.activeTab = tabName;
-      
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
       document.getElementById(`nav-${tabName}`).classList.add('active');
-
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.getElementById(`tab-${tabName}`).classList.add('active');
-
-      document.getElementById('header-title').innerText = tabName === 'options' ? 'Варіанти для бізнесу' : 'Рейтинг варіантів';
     };
 
     // Ініціалізація
