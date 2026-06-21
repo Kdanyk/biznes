@@ -6,10 +6,10 @@
   <meta name="theme-color" content="#1F2937">
   
   <link rel="stylesheet" href="style.css">
-  
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <title>Бізнес Варіанти</title>
+  <title>Бізнес Аналітика</title>
 </head>
 <body>
 
@@ -23,6 +23,17 @@
   <main>
     <section id="tab-options" class="tab-content active"></section>
     <section id="tab-rating" class="tab-content"></section>
+    
+    <section id="tab-analytics" class="tab-content">
+      <div class="analytics-card">
+        <h3>Матриця Ризик / Прибутковість</h3>
+        <p class="analytics-subtitle">Чим вище і правіше — тим краще</p>
+        <canvas id="riskMatrixChart"></canvas>
+      </div>
+      <div class="exchange-rate-banner" id="exchange-rate-banner">
+        Оновлення курсів валют...
+      </div>
+    </section>
   </main>
 
   <div class="fab" id="fab-add" onclick="openOptionModal()">
@@ -38,25 +49,36 @@
       <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
       <span>Рейтинг</span>
     </div>
+    <div class="nav-item" onclick="switchTab('analytics')" id="nav-analytics">
+      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+      <span>Аналітика</span>
+    </div>
   </nav>
 
   <div class="modal-overlay" id="modal-option">
     <div class="modal-box">
       <div class="modal-title" id="modal-option-title">Новий варіант</div>
-      <input type="text" class="modal-input" id="input-option" placeholder="Введіть назву..." autocomplete="off">
-      
+      <input type="text" class="modal-input" id="input-option" placeholder="Назва ідеї (напр. Відкрити Sp. z o.o.)..." autocomplete="off">
       <div class="color-picker" id="color-picker">
         <div class="color-option selected" style="color: #94a3b8; background: #94a3b8;" data-color="#94a3b8" onclick="selectColor(this)"></div>
         <div class="color-option" style="color: #EF4444; background: #EF4444;" data-color="#EF4444" onclick="selectColor(this)"></div>
         <div class="color-option" style="color: #10B981; background: #10B981;" data-color="#10B981" onclick="selectColor(this)"></div>
         <div class="color-option" style="color: #3B82F6; background: #3B82F6;" data-color="#3B82F6" onclick="selectColor(this)"></div>
-        <div class="color-option" style="color: #F59E0B; background: #F59E0B;" data-color="#F59E0B" onclick="selectColor(this)"></div>
-        <div class="color-option" style="color: #8B5CF6; background: #8B5CF6;" data-color="#8B5CF6" onclick="selectColor(this)"></div>
       </div>
-
       <div class="modal-actions">
         <button class="btn-modal btn-cancel" onclick="closeModal('modal-option')">Скасувати</button>
         <button class="btn-modal btn-save" onclick="saveOption()">Зберегти</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-ai-report">
+    <div class="modal-box" style="max-height: 80vh; overflow-y: auto;">
+      <div class="modal-title">📊 Аналіз ідеї</div>
+      <div id="ai-report-content">
+        </div>
+      <div class="modal-actions" style="margin-top: 20px;">
+        <button class="btn-modal btn-cancel" onclick="closeModal('modal-ai-report')">Закрити</button>
       </div>
     </div>
   </div>
