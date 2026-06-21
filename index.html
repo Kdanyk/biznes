@@ -5,12 +5,199 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#1F2937">
   
-  <link rel="stylesheet" href="style.css">
-  
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <title>Бізнес Аналітика</title>
+  
+  <style>
+    /* =========================================
+       Базові Змінні та Glassmorphism
+    ========================================= */
+    :root {
+      --bg-color: var(--tg-theme-secondary-bg-color, #0f172a);
+      --text-main: var(--tg-theme-text-color, #f8fafc);
+      --text-muted: var(--tg-theme-hint-color, #94a3b8);
+      --accent-blue: var(--tg-theme-button-color, #3B82F6);
+      --accent-purple: #8B5CF6;
+      --accent-text: var(--tg-theme-button-text-color, #FFFFFF);
+      --danger-color: #EF4444;
+      --nav-height: 65px;
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background-color: var(--bg-color); color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.5; overflow-x: hidden;
+      padding-bottom: calc(var(--nav-height) + 20px);
+      min-height: 100vh; position: relative;
+    }
+
+    .bg-blob {
+      position: fixed; border-radius: 50%; filter: blur(70px); z-index: -1;
+      opacity: 0.4; animation: float 12s infinite alternate ease-in-out; pointer-events: none;
+    }
+    .blob-1 { top: 5%; left: -10%; width: 250px; height: 250px; background: var(--accent-blue); }
+    .blob-2 { bottom: 15%; right: -10%; width: 300px; height: 300px; background: var(--accent-purple); animation-delay: -5s; }
+
+    @keyframes float {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(30px, 50px) scale(1.1); }
+    }
+
+    /* =========================================
+       Хедер та Папки
+    ========================================= */
+    header {
+      background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--glass-border); padding-top: env(safe-area-inset-top);
+      position: sticky; top: 0; z-index: 40;
+    }
+
+    .folders-container {
+      display: flex; align-items: center; padding: 12px 16px; gap: 10px;
+      overflow-x: auto; flex-wrap: nowrap; scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; scrollbar-width: none;
+    }
+    .folders-container::-webkit-scrollbar { display: none; }
+
+    .folder-chip {
+      display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border);
+      color: var(--text-muted); border-radius: 20px; font-size: 0.9rem; font-weight: 600;
+      white-space: nowrap; flex-shrink: 0; cursor: pointer; transition: all 0.3s ease;
+    }
+    .folder-chip.active {
+      background: rgba(59, 130, 246, 0.2); border-color: var(--accent-blue);
+      color: var(--text-main); box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+    }
+    .folder-chip.archive { border-color: rgba(255, 255, 255, 0.2); border-style: dashed;}
+
+    .btn-delete-folder, .btn-add-folder {
+      background: none; border: none; color: inherit; font-size: 1.2rem; cursor: pointer;
+    }
+    .btn-add-folder {
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      min-width: 36px; height: 36px; border-radius: 50%; border: 1px dashed var(--text-muted); color: var(--text-muted);
+    }
+
+    /* =========================================
+       Контент та Картки
+    ========================================= */
+    main { padding: 16px; max-width: 600px; margin: 0 auto; position: relative; z-index: 10; }
+
+    .tab-content { display: none; animation: fadeIn 0.3s ease forwards; }
+    .tab-content.active { display: flex; flex-direction: column; gap: 12px; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border); border-radius: 16px; padding: 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: var(--glass-shadow); position: relative; transition: transform 0.2s; z-index: 1;
+    }
+
+    .card-content { flex: 1; padding-right: 12px; display: flex; flex-direction: column; gap: 4px; position: relative; }
+    .card-title { font-size: 1rem; font-weight: 600; word-break: break-word; display: flex; align-items: center; gap: 8px;}
+    
+    .color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 8px currentColor; }
+    .folder-badge { align-self: flex-start; font-size: 0.7rem; padding: 2px 8px; background: rgba(255,255,255,0.1); border-radius: 10px; color: var(--text-muted); }
+    .kebab-btn { background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; padding: 0 8px; }
+    .card-actions { display: flex; align-items: center; gap: 10px; }
+    .badge-count { font-size: 1.1rem; font-weight: 700; min-width: 24px; text-align: center; }
+
+    .btn-vote {
+      background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3);
+      color: var(--accent-blue); border-radius: 50%; width: 38px; height: 38px; font-size: 1.4rem;
+      display: flex; justify-content: center; align-items: center; cursor: pointer;
+    }
+    .btn-vote:active { transform: scale(0.9); }
+
+    .float-plus { position: fixed; color: var(--accent-blue); font-weight: bold; font-size: 1.2rem; pointer-events: none; z-index: 100; animation: floatUp 0.8s ease-out forwards; }
+    @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.5); } }
+
+    .dropdown-menu {
+      position: absolute; top: 45px; right: 16px; background: #1e293b;
+      border: 1px solid var(--glass-border); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      z-index: 20; display: none; flex-direction: column; overflow: hidden;
+    }
+    .dropdown-menu.active { display: flex; animation: fadeIn 0.1s; }
+    .dropdown-item { padding: 12px 16px; font-size: 0.9rem; border: none; background: none; text-align: left; color: var(--text-main); cursor: pointer; display: flex; gap: 8px; }
+    .dropdown-item.danger { color: var(--danger-color); }
+    .dropdown-item:not(:last-child) { border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+    /* Аналітика та Графіки */
+    .analytics-card {
+      background: var(--glass-bg); backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px;
+      box-shadow: var(--glass-shadow); margin-bottom: 16px;
+    }
+    .analytics-card h3 { font-size: 1.1rem; margin-bottom: 4px; }
+    .analytics-subtitle { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px; }
+
+    .exchange-rate-banner {
+      background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3);
+      color: var(--accent-blue); padding: 12px; border-radius: 12px; text-align: center; font-size: 0.9rem; font-weight: 600;
+    }
+
+    .ai-badge { display: inline-block; background: linear-gradient(135deg, #8B5CF6, #3B82F6); color: white; font-size: 0.7rem; font-weight: bold; padding: 2px 8px; border-radius: 10px; margin-top: 6px; cursor: pointer; border: none; }
+    .ai-loading { animation: pulse 1.5s infinite; opacity: 0.7; pointer-events: none; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+    .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .report-stat { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; border: 1px solid var(--glass-border); }
+    .report-label { font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;}
+    .report-value { font-size: 1.1rem; font-weight: bold; color: var(--text-main); }
+    .report-text { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; }
+
+    /* FAB */
+    .fab {
+      position: fixed; bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 16px);
+      right: 16px; width: 60px; height: 60px; background: rgba(59, 130, 246, 0.4);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.2);
+      color: var(--text-main); display: flex; justify-content: center; align-items: center;
+      box-shadow: 0 8px 32px rgba(59, 130, 246, 0.4); cursor: pointer; z-index: 30;
+      animation: liquidMorph 4s ease-in-out infinite; transition: transform 0.2s;
+    }
+    .fab:active { transform: scale(0.9); }
+    .fab svg { width: 28px; height: 28px; fill: currentColor; }
+    @keyframes liquidMorph {
+      0%, 100% { border-radius: 50%; } 25% { border-radius: 54% 46% 40% 60% / 55% 45% 55% 45%; }
+      50% { border-radius: 45% 55% 65% 35% / 40% 60% 40% 60%; } 75% { border-radius: 50% 50% 30% 70% / 60% 40% 60% 40%; }
+    }
+
+    /* Модальні Вікна */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); z-index: 100; display: none; justify-content: center; align-items: center; padding: 20px; }
+    .modal-overlay.active { display: flex; }
+    .modal-box { background: rgba(30, 41, 59, 0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); width: 100%; max-width: 400px; border-radius: 20px; padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+    .modal-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 16px; }
+    .modal-input { width: 100%; padding: 14px 16px; border: 1px solid var(--glass-border); border-radius: 12px; background: rgba(0,0,0,0.3); color: var(--text-main); font-size: 1rem; margin-bottom: 16px; outline: none; }
+    .modal-input:focus { border-color: var(--accent-blue); }
+    
+    .color-picker { display: flex; gap: 12px; margin-bottom: 24px; justify-content: center; }
+    .color-option { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s; box-shadow: 0 0 10px currentColor; opacity: 0.5; }
+    .color-option.selected { opacity: 1; transform: scale(1.2); border-color: #FFF; }
+    .modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
+    .btn-modal { padding: 12px 20px; border-radius: 12px; font-weight: 600; border: none; cursor: pointer; }
+    .btn-cancel { background: rgba(255,255,255,0.1); color: var(--text-main); }
+    .btn-save { background: var(--accent-blue); color: var(--accent-text); }
+
+    /* Нижня Навігація */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: calc(var(--nav-height) + env(safe-area-inset-bottom)); background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--glass-border); display: flex; justify-content: space-around; padding-bottom: env(safe-area-inset-bottom); z-index: 40; }
+    .nav-item { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--text-muted); font-size: 0.75rem; font-weight: 600; gap: 4px; cursor: pointer; }
+    .nav-item svg { fill: currentColor; width: 24px; height: 24px; }
+    .nav-item.active { color: var(--accent-blue); }
+    .empty-state { text-align: center; color: var(--text-muted); margin-top: 60px; font-size: 0.95rem; }
+  </style>
 </head>
 <body>
 
@@ -24,16 +211,13 @@
   <main>
     <section id="tab-options" class="tab-content active"></section>
     <section id="tab-rating" class="tab-content"></section>
-    
     <section id="tab-analytics" class="tab-content">
       <div class="analytics-card">
         <h3>Матриця Ризик / Прибутковість</h3>
         <p class="analytics-subtitle">Чим вище і правіше — тим краще</p>
         <canvas id="riskMatrixChart"></canvas>
       </div>
-      <div class="exchange-rate-banner" id="exchange-rate-banner">
-        Оновлення курсів валют...
-      </div>
+      <div class="exchange-rate-banner" id="exchange-rate-banner">Оновлення курсів валют...</div>
     </section>
   </main>
 
@@ -59,7 +243,7 @@
   <div class="modal-overlay" id="modal-option">
     <div class="modal-box">
       <div class="modal-title" id="modal-option-title">Новий варіант</div>
-      <input type="text" class="modal-input" id="input-option" placeholder="Назва ідеї (напр. Відкрити Sp. z o.o.)..." autocomplete="off">
+      <input type="text" class="modal-input" id="input-option" placeholder="Назва ідеї..." autocomplete="off">
       <div class="color-picker" id="color-picker">
         <div class="color-option selected" style="color: #94a3b8; background: #94a3b8;" data-color="#94a3b8" onclick="selectColor(this)"></div>
         <div class="color-option" style="color: #EF4444; background: #EF4444;" data-color="#EF4444" onclick="selectColor(this)"></div>
@@ -94,6 +278,209 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script>
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready(); 
+      window.Telegram.WebApp.expand();
+    }
+
+    const AI_API_KEY = ''; // Сюди потім вставиш свій ключ
+    const AI_API_URL = 'https://api.openai.com/v1/chat/completions';
+
+    let state = {
+      folders: JSON.parse(localStorage.getItem('biz_folders')) || [{ id: 'default', name: 'Загальні' }],
+      options: JSON.parse(localStorage.getItem('biz_options')) || [],
+      activeFolderId: 'default',
+      activeTab: 'options',
+      editingOptionId: null,
+      selectedColor: '#94a3b8',
+      rates: { EUR: 1, PLN: 4.3 }
+    };
+
+    let chartInstance = null;
+
+    const saveData = () => {
+      localStorage.setItem('biz_folders', JSON.stringify(state.folders));
+      localStorage.setItem('biz_options', JSON.stringify(state.options));
+    };
+
+    const fetchExchangeRates = async () => {
+      try {
+        const res = await fetch('https://api.exchangerate-api.com/v4/latest/EUR');
+        const data = await res.json();
+        state.rates.PLN = data.rates.PLN;
+        document.getElementById('exchange-rate-banner').innerText = `💶 1 EUR = 🇵🇱 ${state.rates.PLN.toFixed(2)} PLN`;
+      } catch (e) {
+        console.error("Помилка курсу", e);
+      }
+    };
+
+    const renderFolders = () => {
+      const container = document.getElementById('folders-container');
+      let foldersHTML = state.folders.map(folder => {
+        const isActive = folder.id === state.activeFolderId;
+        const deleteBtnHTML = (isActive && folder.id !== 'default') ? `<button class="btn-delete-folder" onclick="deleteFolder('${folder.id}', event)">×</button>` : '';
+        return `<div class="folder-chip ${isActive ? 'active' : ''}" onclick="selectFolder('${folder.id}')">${folder.name} ${deleteBtnHTML}</div>`;
+      }).join('');
+      
+      const isArchiveActive = state.activeFolderId === 'archive';
+      foldersHTML += `<div class="folder-chip archive ${isArchiveActive ? 'active' : ''}" onclick="selectFolder('archive')">📦 Архів</div>
+                      <button class="btn-add-folder" onclick="openFolderModal()">+</button>`;
+      container.innerHTML = foldersHTML;
+    };
+
+    const selectFolder = (id) => { state.activeFolderId = id; renderFolders(); refreshUI(); };
+    
+    const deleteFolder = (id, event) => {
+      event.stopPropagation();
+      if(confirm('Видалити цю папку?')) {
+        state.folders = state.folders.filter(f => f.id !== id);
+        state.options = state.options.filter(o => o.folderId !== id);
+        state.activeFolderId = 'default'; saveData(); renderFolders(); refreshUI();
+      }
+    };
+
+    const analyzeIdeaWithAI = async (id, event) => {
+      if(event) event.stopPropagation();
+      const option = state.options.find(o => o.id === id);
+      if (!option) return;
+
+      const btn = document.getElementById(`ai-btn-${id}`);
+      btn.classList.add('ai-loading'); btn.innerText = '⏳ Аналізую...';
+
+      if (!AI_API_KEY) {
+        setTimeout(() => {
+          option.aiData = {
+            startupCost: Math.floor(Math.random() * 50000) + 10000,
+            monthlyCost: Math.floor(Math.random() * 10000) + 2000,
+            currency: 'PLN', roiMonths: Math.floor(Math.random() * 24) + 6,
+            risk: Math.floor(Math.random() * 10) + 1, profitability: Math.floor(Math.random() * 10) + 1,
+            timeToLaunch: "2-4 місяці", summary: "Тестовий аналіз (Ключ не підключено)."
+          };
+          saveData(); refreshUI();
+        }, 1500);
+        return;
+      }
+
+      const prompt = `Проаналізуй бізнес ідею: "${option.text}". Контекст: Ринок Європи/Польщі. Поверни СУВОРО JSON: "startupCost"(число), "monthlyCost"(число), "currency"("PLN" або "EUR"), "roiMonths"(число), "risk"(1-10), "profitability"(1-10), "timeToLaunch"(рядок), "summary"(короткий висновок).`;
+
+      try {
+        const response = await fetch(AI_API_URL, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${AI_API_KEY}` },
+          body: JSON.stringify({ model: "gpt-3.5-turbo", messages: [{ role: "user", content: prompt }] })
+        });
+        const data = await response.json();
+        option.aiData = JSON.parse(data.choices[0].message.content); saveData();
+      } catch (error) { alert('Помилка API'); console.error(error); } finally { refreshUI(); }
+    };
+
+    const showAIReport = (id) => {
+      const option = state.options.find(o => o.id === id);
+      if (!option || !option.aiData) return;
+      const ai = option.aiData;
+      document.getElementById('ai-report-content').innerHTML = `
+        <h4 style="margin-bottom: 16px; color: ${option.color}">${option.text}</h4>
+        <div class="report-grid">
+          <div class="report-stat"><span class="report-label">Старт. капітал</span><span class="report-value">${ai.startupCost} ${ai.currency}</span></div>
+          <div class="report-stat"><span class="report-label">Операційні (міс.)</span><span class="report-value">${ai.monthlyCost} ${ai.currency}</span></div>
+          <div class="report-stat"><span class="report-label">Окупність</span><span class="report-value">~${ai.roiMonths} міс.</span></div>
+          <div class="report-stat"><span class="report-label">Час на запуск</span><span class="report-value">${ai.timeToLaunch}</span></div>
+          <div class="report-stat"><span class="report-label">Ризик</span><span class="report-value">⚠️ ${ai.risk}/10</span></div>
+          <div class="report-stat"><span class="report-label">Потенціал</span><span class="report-value">🚀 ${ai.profitability}/10</span></div>
+        </div>
+        <div class="report-text">${ai.summary}</div>`;
+      document.getElementById('modal-ai-report').classList.add('active');
+    };
+
+    const renderChart = () => {
+      const ctx = document.getElementById('riskMatrixChart')?.getContext('2d');
+      if (!ctx) return;
+      const analyzedOptions = state.options.filter(o => o.aiData);
+      if (chartInstance) chartInstance.destroy();
+      chartInstance = new Chart(ctx, {
+        type: 'scatter',
+        data: { datasets: analyzedOptions.map(opt => ({ label: opt.text, data: [{ x: opt.aiData.risk, y: opt.aiData.profitability }], backgroundColor: opt.color || '#3B82F6', pointRadius: 8 })) },
+        options: { responsive: true, scales: { x: { title: { display: true, text: 'Ризик', color: '#94a3b8' }, min: 0, max: 10, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }, y: { title: { display: true, text: 'Прибутковість', color: '#94a3b8' }, min: 0, max: 10, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } } }, plugins: { legend: { display: false } } }
+      });
+    };
+
+    let touchStartX = 0;
+    const handleTouchStart = (e) => { touchStartX = e.changedTouches[0].screenX; };
+    const handleTouchEnd = (id, e) => { if (touchStartX - e.changedTouches[0].screenX > 40) toggleDropdown(id, e, true); };
+
+    const createCardHTML = (option, index = -1, isRating = false) => {
+      let folderBadge = ((state.activeFolderId === 'default' || state.activeFolderId === 'archive') && option.folderId !== 'default') ? `<div class="folder-badge">${state.folders.find(f => f.id === option.folderId)?.name || ''}</div>` : '';
+      let aiButton = option.aiData ? `<button class="ai-badge" onclick="showAIReport('${option.id}')">📊 Дивитись звіт</button>` : `<button class="ai-badge" id="ai-btn-${option.id}" style="background: rgba(255,255,255,0.1); color: #94a3b8;" onclick="analyzeIdeaWithAI('${option.id}', event)">✨ Аналіз AI</button>`;
+      const crown = (isRating && index === 0 && option.votes > 0) ? '👑 ' : '';
+      return `
+        <div class="card" ontouchstart="handleTouchStart(event)" ontouchend="handleTouchEnd('${option.id}', event)">
+          <div class="card-content">${folderBadge}<div class="card-title"><div class="color-dot" style="color: ${option.color || '#94a3b8'};"></div>${crown}${option.text}</div>${aiButton}</div>
+          <div class="card-actions"><span class="badge-count">${option.votes}</span><button class="btn-vote" onclick="vote('${option.id}', event)">+</button><button class="kebab-btn" onclick="toggleDropdown('${option.id}', event)">⋮</button></div>
+          <div class="dropdown-menu" id="dropdown-${option.id}">
+            <button class="dropdown-item" onclick="openOptionModal('${option.id}')">✏️ Редагувати</button>
+            <button class="dropdown-item" onclick="toggleArchive('${option.id}')">${option.archived ? 'Відновити' : '📦 В архів'}</button>
+            <button class="dropdown-item danger" onclick="deleteOption('${option.id}')">🗑️ Видалити назавжди</button>
+          </div>
+        </div>`;
+    };
+
+    const toggleDropdown = (id, event, forceOpen = false) => {
+      if(event) event.stopPropagation();
+      const menu = document.getElementById(`dropdown-${id}`); const card = menu.closest('.card'); const isActive = menu.classList.contains('active');
+      document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.card').forEach(el => el.style.zIndex = '1');
+      if (forceOpen || !isActive) { menu.classList.add('active'); if (card) card.style.zIndex = '50'; }
+    };
+    document.addEventListener('click', () => { document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.remove('active')); document.querySelectorAll('.card').forEach(el => el.style.zIndex = '1'); });
+
+    const vote = (id, event) => { const opt = state.options.find(o => o.id === id); if (opt) { opt.votes++; saveData(); const floatEl = document.createElement('div'); floatEl.className = 'float-plus'; floatEl.innerText = '+1'; floatEl.style.left = `${event.clientX - 10}px`; floatEl.style.top = `${event.clientY - 20}px`; document.body.appendChild(floatEl); setTimeout(() => floatEl.remove(), 800); refreshUI(); } };
+    const toggleArchive = (id) => { const opt = state.options.find(o => o.id === id); if(opt) { opt.archived = !opt.archived; saveData(); refreshUI(); } };
+    const deleteOption = (id) => { if(confirm('Видалити назавжди?')) { state.options = state.options.filter(o => o.id !== id); saveData(); refreshUI(); } };
+
+    const refreshUI = () => {
+      const containerOptions = document.getElementById('tab-options'); const containerRating = document.getElementById('tab-rating');
+      let filteredOptions = [];
+      if (state.activeFolderId === 'archive') filteredOptions = state.options.filter(opt => opt.archived);
+      else if (state.activeFolderId === 'default') filteredOptions = state.options.filter(opt => !opt.archived);
+      else filteredOptions = state.options.filter(opt => opt.folderId === state.activeFolderId && !opt.archived);
+
+      document.getElementById('fab-add').style.display = (state.activeFolderId === 'default' || state.activeFolderId === 'archive') ? 'none' : 'flex';
+
+      if (filteredOptions.length === 0) {
+        containerOptions.innerHTML = containerRating.innerHTML = '<div class="empty-state">Тут поки порожньо.</div>';
+      } else {
+        containerOptions.innerHTML = [...filteredOptions].sort((a, b) => b.createdAt - a.createdAt).map(opt => createCardHTML(opt)).join('');
+        containerRating.innerHTML = [...filteredOptions].sort((a, b) => b.votes !== a.votes ? b.votes - a.votes : a.createdAt - b.createdAt).map((opt, i) => createCardHTML(opt, i, true)).join('');
+      }
+      if (state.activeTab === 'analytics') renderChart();
+    };
+
+    const switchTab = (tabName) => {
+      state.activeTab = tabName;
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); document.getElementById(`nav-${tabName}`).classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.getElementById(`tab-${tabName}`).classList.add('active');
+      if (tabName === 'analytics') renderChart();
+    };
+
+    const selectColor = (element) => { document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected')); element.classList.add('selected'); state.selectedColor = element.getAttribute('data-color'); };
+    const openOptionModal = (editId = null) => {
+      if (!editId && (state.activeFolderId === 'default' || state.activeFolderId === 'archive')) return;
+      state.editingOptionId = editId; const input = document.getElementById('input-option');
+      if (editId) { const opt = state.options.find(o => o.id === editId); input.value = opt.text; const colorOpt = document.querySelector(`.color-option[data-color="${opt.color || '#94a3b8'}"]`); if(colorOpt) selectColor(colorOpt); } 
+      else { input.value = ''; selectColor(document.querySelector('.color-option[data-color="#94a3b8"]')); }
+      document.getElementById('modal-option').classList.add('active'); setTimeout(() => input.focus(), 100);
+    };
+    const saveOption = () => {
+      const text = document.getElementById('input-option').value.trim(); if (!text) return;
+      if (state.editingOptionId) { const opt = state.options.find(o => o.id === state.editingOptionId); if (opt) { opt.text = text; opt.color = state.selectedColor; } } 
+      else { state.options.push({ id: Date.now().toString(), folderId: state.activeFolderId, text, votes: 0, color: state.selectedColor, archived: false, createdAt: Date.now() }); }
+      saveData(); closeModal('modal-option'); refreshUI();
+    };
+    const openFolderModal = () => { document.getElementById('input-folder').value = ''; document.getElementById('modal-folder').classList.add('active'); setTimeout(() => document.getElementById('input-folder').focus(), 100); };
+    const saveFolder = () => { const name = document.getElementById('input-folder').value.trim(); if (!name) return; const newFolder = { id: 'f_' + Date.now(), name }; state.folders.push(newFolder); state.activeFolderId = newFolder.id; saveData(); closeModal('modal-folder'); renderFolders(); refreshUI(); };
+    const closeModal = (modalId) => { document.getElementById(modalId).classList.remove('active'); };
+
+    fetchExchangeRates(); renderFolders(); refreshUI();
+  </script>
 </body>
 </html>
