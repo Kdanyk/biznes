@@ -5,8 +5,8 @@ if (window.Telegram && window.Telegram.WebApp) {
 
 // ⚠️ УВАГА: В реальному продакшені API ключі НЕ зберігаються на фронтенді! 
 // Але для особистого PWA додатку в Telegram це припустимо для тестування.
-const AI_API_KEY = ''; // Встав сюди свій ключ (наприклад, OpenAI)
-const AI_API_URL = 'https://api.openai.com/v1/chat/completions';
+const AI_API_KEY = 'AQ.Ab8RN6KNiLBsE-8dJLDZ6AZYfD6M_VAEjSpj7_uQ_Mzy42Aeeg'; // Встав сюди свій ключ (наприклад, OpenAI)
+const AI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${AI_API_KEY}';
 
 let state = {
   folders: JSON.parse(localStorage.getItem('biz_folders')) || [{ id: 'default', name: 'Загальні' }],
