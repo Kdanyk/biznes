@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  
+  <meta name="theme-color" content="#F9FAFB">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Бізнес Оцінка">
+  <link rel="manifest" href="manifest.json">
+  
+  <title>Бізнес Варіанти</title>
+  <style>
+    /* =========================================
+       Базові налаштування та змінні
+    ========================================= */
+    :root {
+      --bg-color: #F9FAFB;
+      --card-bg: #FFFFFF;
+      --text-main: #1F2937;
+      --text-muted: #6B7280;
+      --accent-blue: #3B82F6;
+      --accent-blue-hover: #2563EB;
+      --border-color: #E5E7EB;
+      --nav-height: 65px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* =========================================
+       Макет та Хедер
+    ========================================= */
+    header {
+      background-color: var(--card-bg);
+      padding: env(safe-area-inset-top) 20px 16px;
+      padding-top: calc(env(safe-area-inset-top) + 20px);
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    header h1 { font-size: 1.25rem; font-weight: 700; color: #111827; }
+
+    main {
+      padding: 20px 20px calc(var(--nav-height) + env(safe-area-inset-bottom) + 20px);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* =========================================
+       Анімації та Вкладки
+    ========================================= */
+    .tab-content { display: none; }
+    .tab-content.active { 
+      display: block; 
+      animation: fadeIn 0.3s ease forwards; 
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* =========================================
+       Форма введення
+    ========================================= */
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 14px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      font-size: 1rem;
+      background: var(--card-bg);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus { border-color: var(--accent-blue); }
+
+    .btn-add {
+      background-color: var(--accent-blue);
+      color: #FFF;
+      border: none;
+      border-radius: 12px;
+      padding: 0 20px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .btn-add:active { transform: scale(0.95); }
+
+    /* =========================================
+       Список карток
+    ========================================= */
+    .list { display: flex; flex-direction: column; gap: 12px; }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.04);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid var(--border-color);
+    }
+
+    .card-text { font-size: 1rem; font-weight: 500; word-break: break-word; padding-right: 15px;}
+
+    .card-controls { display: flex; align-items: center; gap: 12px; }
+
+    .badge-count {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-main);
+      min-width: 24px;
+      text-align: center;
+    }
+
+    .btn-vote {
+      background-color: #EFF6FF;
+      color: var(--accent-blue);
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 1.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-vote:active {
+      transform: scale(0.85);
+      background-color: var(--accent-blue);
+      color: #FFF;
+    }
+
+    .empty-state { text-align: center; color: var(--text-muted); margin-top: 40px; font-size: 0.95rem; }
+
+    /* =========================================
+       Нижня панель навігації
+    ========================================= */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: calc(var(--nav-height) + env(safe-area-inset-bottom));
+      background-color: var(--card-bg);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      padding-bottom: env(safe-area-inset-bottom);
+      z-index: 100;
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.75rem;
+      font-weight: 600;
+      gap: 4px;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .nav-item svg { fill: currentColor; width: 24px; height: 24px; }
+    .nav-item.active { color: var(--accent-blue); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1 id="header-title">Варіанти для бізнесу</h1>
+  </header>
+
+  <main>
+    <section id="tab-options" class="tab-content active">
+      <div class="input-group">
+        <input type="text" id="option-input" placeholder="Назва нового варіанту..." autocomplete="off">
+        <button class="btn-add" onclick="addOption()">Додати</button>
+      </div>
+      <div id="options-list" class="list"></div>
+    </section>
+
+    <section id="tab-rating" class="tab-content">
+      <div id="rating-list" class="list"></div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <div class="nav-item active" onclick="switchTab('options')" id="nav-options">
+      <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+      <span>Варіанти</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('rating')" id="nav-rating">
+      <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+      <span>Рейтинг</span>
+    </div>
+  </nav>
+
+  <script>
+    // Ініціалізація даних з localStorage
+    let businessOptions = JSON.parse(localStorage.getItem('business_options')) || [];
+
+    // Збереження даних
+    const saveToLocalStorage = () => {
+      localStorage.setItem('business_options', JSON.stringify(businessOptions));
+    };
+
+    // Додавання нового варіанту
+    const addOption = () => {
+      const input = document.getElementById('option-input');
+      const text = input.value.trim();
+      
+      if (text === '') return;
+
+      const newOption = {
+        id: Date.now().toString(),
+        text: text,
+        votes: 0,
+        createdAt: Date.now()
+      };
+
+      businessOptions.push(newOption);
+      saveToLocalStorage();
+      input.value = '';
+      
+      renderOptions();
+    };
+
+    // Обробка натискання Enter в інпуті
+    document.getElementById('option-input').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') addOption();
+    });
+
+    // Збільшення лічильника
+    const vote = (id) => {
+      const option = businessOptions.find(opt => opt.id === id);
+      if (option) {
+        option.votes += 1;
+        saveToLocalStorage();
+        
+        // Оновлюємо UI залежно від активної вкладки
+        const activeTab = document.querySelector('.tab-content.active').id;
+        if (activeTab === 'tab-options') {
+          // Оновлюємо тільки цифру, щоб уникнути перемальовування всього списку та втрати фокусу
+          document.getElementById(`vote-count-${id}`).innerText = option.votes;
+        } else {
+          renderRating(); // В рейтингу треба перемалювати для сортування
+        }
+      }
+    };
+
+    // Генерація HTML для однієї картки
+    const createCardHTML = (option) => {
+      return `
+        <div class="card">
+          <div class="card-text">${option.text}</div>
+          <div class="card-controls">
+            <span class="badge-count" id="vote-count-${option.id}">${option.votes}</span>
+            <button class="btn-vote" onclick="vote('${option.id}')">+</button>
+          </div>
+        </div>
+      `;
+    };
+
+    // Рендер списку "Варіанти"
+    const renderOptions = () => {
+      const listElement = document.getElementById('options-list');
+      if (businessOptions.length === 0) {
+        listElement.innerHTML = '<div class="empty-state">Поки немає жодного варіанту. Додайте перший!</div>';
+        return;
+      }
+      
+      // Сортуємо за часом додавання (нові знизу)
+      const sortedByTime = [...businessOptions].sort((a, b) => a.createdAt - b.createdAt);
+      listElement.innerHTML = sortedByTime.map(createCardHTML).join('');
+    };
+
+    // Рендер списку "Рейтинг"
+    const renderRating = () => {
+      const listElement = document.getElementById('rating-list');
+      if (businessOptions.length === 0) {
+        listElement.innerHTML = '<div class="empty-state">Немає даних для рейтингу.</div>';
+        return;
+      }
+
+      // Сортування: 1) за голосами (спадання), 2) за часом додавання (зростання)
+      const sortedByVotes = [...businessOptions].sort((a, b) => {
+        if (b.votes !== a.votes) {
+          return b.votes - a.votes;
+        }
+        return a.createdAt - b.createdAt;
+      });
+
+      listElement.innerHTML = sortedByVotes.map(createCardHTML).join('');
+    };
+
+    // Логіка перемикання вкладок
+    const switchTab = (tabName) => {
+      // Оновлення активного стану кнопок навігації
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.getElementById(`nav-${tabName}`).classList.add('active');
+
+      // Оновлення активної вкладки з анімацією
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+
+      // Зміна заголовка та рендер відповідних даних
+      const headerTitle = document.getElementById('header-title');
+      if (tabName === 'options') {
+        headerTitle.innerText = 'Варіанти для бізнесу';
+        renderOptions();
+      } else {
+        headerTitle.innerText = 'Рейтинг варіантів';
+        renderRating();
+      }
+    };
+
+    // Ініціалізація при завантаженні
+    renderOptions();
+  </script>
+</body>
+</html>
